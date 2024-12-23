@@ -1,0 +1,283 @@
+---
+title: "INFS 324 Project: Exploratory analysis using R
+        R Malatjie
+        student number: 37820982"
+output: word_document
+date: "2024-10-08"
+---
+```{r setup, include=FALSE}
+library(ggplot2)
+library(dplyr)
+library(readxl)
+library(ggplot2)
+```
+This Document Demonstrates the Exploratory Data Analysis of the turnover data provided for the INFS324 Project using R. Below are the observations and results of each analysis.First, the necessary packages had to be installed and loaded.
+
+# 1. Import data turnover excel file
+```{r}
+
+turnoverdata <-read_excel("Turnover.xlsx")
+```
+
+Next, we proceed to inspect the number of rows and columns
+
+## inspection of no. of rows and columns
+```{r}
+#Code to inspect rows and columns
+rowsandcolumns<- dim(turnoverdata)
+print(rowsandcolumns)
+
+
+cont_variables<-str(turnoverdata)
+```
+
+From this information, the variables found are numbers(num) and characters(chr), along with the column names and sample of the data variables.
+
+There are 1129 rows, and 16 columns
+
+# 2.Histogram showing distribution of Employee's work experience#
+To investigate the distribution of employees' work experience, a histogram has to be created to display the distribution for proper analysis. 
+```{r histogram}
+
+#histogram creation
+hist(turnoverdata$experience,breaks = 15,                    
+     col = "red",               # Color for the bars according the question
+     border = "black",                # Border color
+     main = "Distribution of Work Experience",  # Title
+     xlab = "Experience (Years)",     # X-axis label
+     ylab = "Frequency")              # Y-axis label
+```
+
+
+
+# 3.Descriptive stats for Average levels of  extraversion and anxiety#
+Here, we calculate the average (mean) and the middle value (median) for two personality traits: extraversion and anxiety. This helps us understand the avarege levels and general tendencies of employees regarding these traits.
+
+
+## Calculate mean and median for extraversion
+```{r}
+extrav_mean<-mean(turnoverdata$extraversion, na.rm= TRUE)
+extrav_median<-median(turnoverdata$extraversion, na.rm= TRUE)
+
+#calculate mean and median for anxiety
+anxiety_mean<-mean(turnoverdata$anxiety, na.rm= TRUE)
+anxiety_median<-median(turnoverdata$anxiety, na.rm= TRUE)
+
+print(extrav_mean) 
+print(extrav_median)
+print(anxiety_mean)
+print(anxiety_median)
+```
+From the Results of the code:
+
+## Extraversion:
+Mean= 5.592383
+
+Findings: On average, employees show a moderately high level of extraversion.
+
+Median: 5.4
+
+Findings: Slightly lower than the mean, implying a slight right skew in the extraversion scores because few employees may have a higher score.
+
+## Anxiety:
+Mean= 5.665633
+
+Findings: On average, the employees have reported a moderate level of anxiety. 
+
+Median= 5.6
+
+Findings: Being closely similar to the mean suggests a symmetric distribution of anxiety scores among the employees. 
+
+# 4.Gender Distribution across professions#
+Here, we calculate the average (mean) and the middle value (median) for two personality traits: extraversion and anxiety. This helps us understand the general tendencies of employees regarding these traits and can indicate how they might affect their work behavior.
+
+```{r gender distribution, visible= FALSE}
+genderProfession_table <- table(turnoverdata$profession, turnoverdata$gender)
+
+barplot(genderProfession_table[, "m"],# Select counts for males
+        col = "green",                            # Color for male bars
+        main = "Number of Males in Each Profession", 
+        xlab = "Profession", 
+        ylab = "Count", 
+        names.arg = rownames(genderProfession_table),  # Profession names
+        las = 2, # Rotate x-axis labels to be vertical
+        cex.names = 0.7, # Font size for profession names
+        border = "black") 
+                     
+# Bar chart for females
+barplot(genderProfession_table[,"f"], # Select counts for females
+        col = "green", # Color for female bars
+        main = "Number of Females in Each Profession", 
+        xlab = "Profession", 
+        ylab = "Count", 
+        names.arg = rownames(genderProfession_table),  # Profession names
+        las = 2.5,# Rotate x-axis labels to be vertical
+        cex.names = 0.7, # Font size for profession names
+        border = "black")           
+
+```
+
+
+
+# 5.Cross tabulation: Relationship between industry and experience#
+Here, We categorize experience into groups (like 0-5 years, 6-10 years, etc.) and create a cross-tabulation to observe how experience levels are distributed across different industries. This analysis reveals trends that might exist in hiring or promotion practices.
+
+
+
+##Investigate relationships(experience&industry)
+```{r}
+# Finding max value to evaluate categorizing
+
+library(knitr)
+maxexperience <- max(turnoverdata$experience, na.rm = TRUE)
+
+# Categorizing the experience into groups
+turnoverdata$experiencegroup <- cut(turnoverdata$experience,
+                                     breaks = c(0, 5, 10, 20, 30, 50, Inf),
+                                     labels = c("0-5 years", "6-10 years", "11-20 years", 
+                                                "21-30 years", "31-50 years", "50+ years"),
+                                     right = FALSE)
+
+# Create a contingency table for industry and experience groups
+industryAndexperience_table <- table(turnoverdata$industry, turnoverdata$experiencegroup)
+
+kable(industryAndexperience_table, format = "markdown", 
+      caption = "Contingency Table of Industry and Experience Groups")
+
+```
+### Summary: 
+The table shows how experience levels are distributed across 14 different industries, highlighting the number of employees in each experience category for each industry.
+ 
+Retail and manufacturing show to have a higher representation of experienced employees, whereas telecom have a more youthful group of employees
+
+
+
+## Bar Plot visualizing the cross-tabulation results:
+```{r}
+#Bar plot for visualiztion of table
+barplot(industryAndexperience_table,
+        main = "Experience Groups Distribution Across Industries",
+        xlab = "Industry",
+        ylab = "Count",
+        col = c("lightblue", "lightgreen", "yellow", "orange", "purple", "pink"),  # Colors for different experience groups
+        beside = FALSE,  # Stacked bar graph look
+        las = 2,  # Rotate x-axis labels
+        border = NA)
+legend("topright",
+       legend = colnames(industryAndexperience_table),  # Experience group labels
+       fill = c("lightblue", "lightgreen", "yellow", "orange", "purple", "pink"),
+       title = "Experience Groups",
+       cex = 0.4)
+```
+
+# 6. Distribution of Employees based on mode of Transport#
+This visualization helps understand employees' commuting preferences and can inform company policies on transport benefits or initiatives.
+```{r}
+
+wayTable <- table(turnoverdata$way)
+
+# Bar plot for transport modes
+barplot(wayTable,
+        col = "magenta",    # magenta
+        main = "Distribution of Transport Modes",
+        xlab = "Mode of Transport",
+        ylab = "Count")
+```
+
+### Summary
+Most used mode of transport amongst the employees is the bus, followed by those who use cars and those walking being a small minority of the employees.
+
+
+
+# 7.Examine personality traits(extraversion and Self-Control) by gender#
+#Descriptive Statistics by gender
+We calculate the average for each trait and create bar plots to visually compare the two genders. This comparison provides insights into how personality traits may influence work dynamics based on gender.
+```{r}
+# Calculate the average extraversion by gender
+avg_extraversion <- tapply(turnoverdata$extraversion, turnoverdata$gender, mean, na.rm = TRUE)
+
+# Create a bar plot for average extraversion by gender
+barplot(avg_extraversion,
+        main = "Bar plot: Extraversion by Gender",
+        ylab = "Average Extraversion",
+        col = c("blue", "green"),
+        names.arg = c("Male", "Female"), # Change labels if needed
+        beside = TRUE)
+
+# Calculate the average self-control by gender
+avg_selfcontrol <- tapply(turnoverdata$selfcontrol, turnoverdata$gender, mean, na.rm = TRUE)
+
+# Create a bar plot for average self-control by gender
+barplot(avg_selfcontrol,
+        main = "Bar plot: Self-Control by Gender",
+        ylab = "Average Self-Control",
+        col = c("cyan", "red"),
+        names.arg = c("Male", "Female"), # Change labels if needed
+        beside = TRUE)
+```
+## Findings
+Females show a lower avarage of extraversion while showing a higher average in self-control, while the males show a higher average in extraversion , but showing to have a lower average in self-control.
+
+
+# 8. Finding the highest average work experience by profession
+
+This analysis helps identify which roles may require more experience and can assist in workforce planning and development.
+```{r}
+
+avgExperiencebyProfession <- 
+  aggregate(experience ~ profession, data = turnoverdata, FUN = mean)
+
+print(avgExperiencebyProfession) #to show the tabular results
+
+## Bar chart for average experience by profession
+# code to calculate the average experience by profession
+avgExperiencebyProfession <- tapply(turnoverdata$experience, turnoverdata$profession, mean, na.rm = TRUE)
+
+# bar plot code for average experience by profession
+barplot(avgExperiencebyProfession,
+        main = "Average Work Experience by Profession",
+        xlab = "Profession",
+        ylab = "Average Experience",
+        col = "lightblue",
+        las = 2) 
+```
+### Results
+By observing the bar chart, it shows Highest average work experience to be in the Accounting profession. 
+
+# 9.Proportion of the employees getting coaching by gender#
+We investigate how many employees receive coaching and compare this between genders using a cross-tabulation, then visualizing it using a bar plot
+```{r}
+## Cross-tabulation of employees who receive coaching and comparing between genders 
+
+coachingGender <- table(turnoverdata$gender, turnoverdata$coach)
+
+print(coachingGender)
+
+# Proportion of employees receiving coaching by gender, in percentage format
+coachingGenderProp <- prop.table(coachingGender, margin = 1)*100
+
+# Print the cross-tabulation table
+library(knitr)
+kable(coachingGenderProp, format = "pipe", 
+      caption = " Employees Coaching count by Gender(%)")
+
+```
+###Findings:
+58.38% of female employees and 67.03% of male employees receive coaching, indicating higher participation among males. While 29.07% of females and 23.91% of males do not receive coaching, females show a slightly higher rate of non-participation. The smaller percentages in the "uncertain or other status" category (12.54% for females and 9.06% for males) suggest that most employees clearly identify as either receiving or not receiving coaching.
+
+# Bar plot to visualize the proportions of coaching by gender
+```{r}
+barplot(coachingGenderProp,
+        main = "Proportion of Employees Receiving Coaching by Gender",
+        xlab = "Coaching Status",
+        ylab = "Percentage",
+        col = c("yellow", "brown"),
+        legend = rownames(coachingGenderProp), #the legend for gender
+        beside = TRUE, # to Separate bars for each gender
+        ylim = c(0, 100))
+```
+
+# Conclusion
+By implementing R functions and visualizations, addressing key research questions is successful in conducting an exporatory data analysis of the Turnover Dataset, shedding light on the employee's characteristics and trends.
+
+End
